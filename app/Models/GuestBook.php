@@ -12,6 +12,17 @@ class GuestBook extends Model
     protected $table = 'guestbook';
 
     protected $fillable = [
-        'name'
+        'name',
+        'review'
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->timestamps = false;
+            $model->created_at= now();
+        });
+    }
 }

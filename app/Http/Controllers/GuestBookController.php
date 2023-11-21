@@ -38,14 +38,15 @@ class GuestBookController extends Controller
         $data = [
             'captchaAnswer' => $request->captcha_answer,
             'name' => $request->name,
-            'captchaKey' => $request->captcha_key
+            'captchaKey' => $request->captcha_key,
+            'review' => $request->review
         ];
 
         $guestBook = $this->guestBookService->createGuestBook($data);
 
         if (is_array($guestBook)) {
             return response()->json([
-                'message' => $guestBook['message']
+                'message' => (array)$guestBook['message']
             ], $guestBook['status']);
         }
 

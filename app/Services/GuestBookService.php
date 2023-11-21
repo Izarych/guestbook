@@ -15,10 +15,12 @@ class GuestBookService
     {
         $key = Str::random(32);
 
-        $answer = Str::random(5);
+        $allowedCharacters = str_split('ABCDEFGHJKLMNPQRSTUVWXYZ23456789');
+        $characters = str_shuffle(implode('', $allowedCharacters));
+
+        $answer = substr($characters, 0, 5);
 
         $img = Image::canvas(150, 50, '#ccc');
-
         $fontColor = $this->generateRandomColor();
 
         $img->text($answer, 75, 25, function ($font) use ($fontColor) {
@@ -29,17 +31,6 @@ class GuestBookService
             $font->valign('middle');
         });
 
-        $hashKey = md5($key);
-
-        $captchasDir = public_path("captchas");
-
-        if (!file_exists($captchasDir)) {
-            mkdir($captchasDir, 0755, true);
-        }
-
-        $imgPath = $captchasDir . DIRECTORY_SEPARATOR . $hashKey . ".png";
-        $img->save($imgPath);
-
         $captcha = new Captcha([
             'key' => $key,
             'answer' => $answer
@@ -47,11 +38,11 @@ class GuestBookService
 
         $captcha->save();
 
-        // to get img on localhost
-        $captchaImg = url('captchas' . DIRECTORY_SEPARATOR . $hashKey . '.png');
+        $image = $img->encode('data-url');
+
         return [
-            'captcha_image' => $captchaImg,
-            'captcha_key' => $key
+            'captcha_key' => $key,
+            'captcha_image' => $image
         ];
     }
 
@@ -60,25 +51,25 @@ class GuestBookService
         $captchaKey = $data['captchaKey'];
         $name = $data['name'];
         $captchaAnswer = $data['captchaAnswer'];
+        $review = $data['review'];
 
         $captcha = Captcha::where('key', $captchaKey)->first();
 
         if (! ($captchaAnswer === $captcha->answer) ) {
             return [
-                'message' => 'Неверно введена капча',
+                'message' => (array)'Неверно введена капча',
                 'status' => 400
             ];
         }
 
         $guestBook = new GuestBook();
-
-        $guestBook->name = $name;
+        $guestBook->fill($data);
 
         if (! $guestBook->save()) {
             Log::error('Произошла ошибка при сохранении GuestBook' . $guestBook);
 
             return [
-                'message' => 'Произошла ошибка',
+                'message' => (array)'Произошла ошибка',
                 'status' => 500
             ];
         }
@@ -87,7 +78,7 @@ class GuestBookService
             Log::error('Произошла ошибка при удалении капчи' . $captcha);
 
             return [
-                'message' => 'Произошла ошибка',
+                'message' => (array)'Произошла ошибка',
                 'status' => 500
             ];
         }

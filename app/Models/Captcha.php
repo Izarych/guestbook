@@ -13,4 +13,14 @@ class Captcha extends Model
         'answer',
         'key'
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->timestamps = false;
+            $model->created_at= now();
+        });
+    }
 }
